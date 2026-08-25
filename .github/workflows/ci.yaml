@@ -3,6 +3,7 @@ name: Tests
 on:
   pull_request:
     branches:
+      - "main"
       - "1.0-develop"
 
 jobs:
