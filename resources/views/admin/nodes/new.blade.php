@@ -156,6 +156,19 @@
                             <p class="text-muted small">The daemon runs its own SFTP management container and does not use the SSHd process on the main physical server. <Strong>Do not use the same port that you have assigned for your physical server's SSH process.</strong> If you will be running the daemon behind CloudFlare&reg; you should set the daemon port to <code>8443</code> to allow websocket proxying over SSL.</p>
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="form-group col-md-8">
+                            <label for="pPublicSFTPHost" class="form-label">Public SFTP Host</label>
+                            <input type="text" name="public_sftp_host" class="form-control" id="pPublicSFTPHost" value="{{ old('public_sftp_host') }}" placeholder="sftp.example.com" />
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label for="pPublicSFTPPort" class="form-label">Public SFTP Port</label>
+                            <input type="text" name="public_sftp_port" class="form-control" id="pPublicSFTPPort" value="{{ old('public_sftp_port') }}" placeholder="2022" />
+                        </div>
+                        <div class="col-md-12">
+                            <p class="text-muted small">Optional customer-facing SFTP endpoint when Wings is reached through a TCP proxy or edge gateway. Leave these fields empty to use the node FQDN and daemon SFTP port.</p>
+                        </div>
+                    </div>
                 </div>
                 <div class="box-footer">
                     {!! csrf_field() !!}

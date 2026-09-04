@@ -35,6 +35,8 @@ class UpdateNodeTest extends ApplicationApiIntegrationTestCase
             'disk_overallocate' => 20,
             'daemon_sftp' => 1101,
             'daemon_listen' => 1102,
+            'public_sftp_host' => 'sftp.example.com',
+            'public_sftp_port' => 2202,
         ])
             ->assertOk()
             ->assertJsonPath('object', 'node')
@@ -47,8 +49,14 @@ class UpdateNodeTest extends ApplicationApiIntegrationTestCase
             ->assertJsonPath('attributes.disk', 200)
             ->assertJsonPath('attributes.disk_overallocate', 20)
             ->assertJsonPath('attributes.daemon_sftp', 1101)
-            ->assertJsonPath('attributes.daemon_listen', 1102);
+            ->assertJsonPath('attributes.daemon_listen', 1102)
+            ->assertJsonPath('attributes.public_sftp_host', 'sftp.example.com')
+            ->assertJsonPath('attributes.public_sftp_port', 2202);
 
-        $this->assertEquals($location->id, $node->refresh()->location_id);
+        $node->refresh();
+
+        $this->assertEquals($location->id, $node->location_id);
+        $this->assertSame('sftp.example.com', $node->public_sftp_host);
+        $this->assertSame(2202, $node->public_sftp_port);
     }
 }

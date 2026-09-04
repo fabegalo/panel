@@ -23,6 +23,23 @@ class NodeConfigurationControllerTest extends ApplicationApiIntegrationTestCase
         $this->assertSame(decrypt($node->daemon_token), $response->json('token'));
     }
 
+    public function testPublicSftpEndpointDoesNotChangeWingsConfiguration(): void
+    {
+        $this->createNewDefaultApiKey($this->getApiUser(), ['r_nodes' => AdminAcl::READ | AdminAcl::WRITE]);
+
+        $node = Node::factory()->for(Location::factory())->create([
+            'daemonSFTP' => 2022,
+            'public_sftp_host' => 'sftp.example.com',
+            'public_sftp_port' => 2202,
+        ]);
+
+        $this->getJson('/api/application/nodes/' . $node->id . '/configuration')
+            ->assertOk()
+            ->assertJsonPath('system.sftp.bind_port', 2022)
+            ->assertJsonMissingPath('public_sftp_host')
+            ->assertJsonMissingPath('public_sftp_port');
+    }
+
     public function testReadOnlyNodeKeyCannotGetNodeConfiguration(): void
     {
         $this->createNewDefaultApiKey($this->getApiUser(), ['r_nodes' => AdminAcl::READ]);

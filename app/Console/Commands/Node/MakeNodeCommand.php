@@ -23,6 +23,8 @@ class MakeNodeCommand extends Command
                             {--uploadSize= : Enter the maximum upload filesize.}
                             {--daemonListeningPort= : Enter the wings listening port.}
                             {--daemonSFTPPort= : Enter the wings SFTP listening port.}
+                            {--publicSFTPHost= : Enter the customer-facing SFTP hostname.}
+                            {--publicSFTPPort= : Enter the customer-facing SFTP port.}
                             {--daemonBase= : Enter the base folder.}';
 
     protected $description = 'Creates a new node on the system via the CLI.';
@@ -61,6 +63,8 @@ class MakeNodeCommand extends Command
         $data['upload_size'] = $this->option('uploadSize') ?? $this->ask('Enter the maximum filesize upload', '100');
         $data['daemonListen'] = $this->option('daemonListeningPort') ?? $this->ask('Enter the wings listening port', '8080');
         $data['daemonSFTP'] = $this->option('daemonSFTPPort') ?? $this->ask('Enter the wings SFTP listening port', '2022');
+        $data['public_sftp_host'] = $this->option('publicSFTPHost');
+        $data['public_sftp_port'] = $this->option('publicSFTPPort');
         $data['daemonBase'] = $this->option('daemonBase') ?? $this->ask('Enter the base folder', '/var/lib/pterodactyl/volumes');
 
         $node = $this->creationService->handle($data);
