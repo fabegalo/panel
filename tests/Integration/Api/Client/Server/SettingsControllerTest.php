@@ -152,6 +152,41 @@ class SettingsControllerTest extends ClientApiIntegrationTestCase
             ->assertJsonPath('attributes.skip_scripts', true);
     }
 
+    /**
+     * Test that a node can advertise a customer-facing SFTP endpoint independently
+     * from the hostname and port Wings uses internally.
+     */
+    public function testPublicSftpEndpointIsExposedToClient(): void
+    {
+        [$user, $server] = $this->generateTestAccount([]);
+
+        $server->node->update([
+            'public_sftp_host' => 'sftp.example.com',
+            'public_sftp_port' => 2202,
+        ]);
+
+        $this->actingAs($user)
+            ->getJson("/api/client/servers/$server->uuid")
+            ->assertOk()
+            ->assertJsonPath('attributes.sftp_details.ip', 'sftp.example.com')
+            ->assertJsonPath('attributes.sftp_details.port', 2202);
+    }
+
+    /**
+     * Test that existing nodes retain their original SFTP endpoint when no public
+     * override has been configured.
+     */
+    public function testSftpEndpointFallsBackToNodeConnectionDetails(): void
+    {
+        [$user, $server] = $this->generateTestAccount([]);
+
+        $this->actingAs($user)
+            ->getJson("/api/client/servers/$server->uuid")
+            ->assertOk()
+            ->assertJsonPath('attributes.sftp_details.ip', $server->node->fqdn)
+            ->assertJsonPath('attributes.sftp_details.port', $server->node->daemonSFTP);
+    }
+
     public static function renamePermissionsDataProvider(): array
     {
         return [[[]], [[Permission::ACTION_SETTINGS_RENAME]]];

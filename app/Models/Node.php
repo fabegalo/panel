@@ -34,6 +34,8 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @property string $daemon_token
  * @property int $daemonListen
  * @property int $daemonSFTP
+ * @property string|null $public_sftp_host
+ * @property int|null $public_sftp_port
  * @property string $daemonBase
  * @property \Carbon\Carbon $created_at
  * @property \Carbon\Carbon $updated_at
@@ -78,6 +80,7 @@ class Node extends Model implements Identifiable
         'disk' => 'integer',
         'daemonListen' => 'integer',
         'daemonSFTP' => 'integer',
+        'public_sftp_port' => 'integer',
         'behind_proxy' => 'boolean',
         'public' => 'boolean',
         'maintenance_mode' => 'boolean',
@@ -92,6 +95,7 @@ class Node extends Model implements Identifiable
         'memory', 'memory_overallocate', 'disk',
         'disk_overallocate', 'upload_size', 'daemonBase',
         'daemonSFTP', 'daemonListen',
+        'public_sftp_host', 'public_sftp_port',
         'description', 'maintenance_mode',
     ];
 
@@ -109,6 +113,8 @@ class Node extends Model implements Identifiable
         'disk_overallocate' => 'required|numeric|min:-1',
         'daemonBase' => 'sometimes|required|regex:/^([\/][\d\w.\-\/]+)$/',
         'daemonSFTP' => 'required|numeric|between:1,65535',
+        'public_sftp_host' => 'nullable|string|max:253',
+        'public_sftp_port' => 'nullable|numeric|between:1,65535',
         'daemonListen' => 'required|numeric|between:1,65535',
         'maintenance_mode' => 'boolean',
         'upload_size' => 'int|min:1',
@@ -134,6 +140,22 @@ class Node extends Model implements Identifiable
     public function getConnectionAddress(): string
     {
         return sprintf('%s://%s:%s', $this->scheme, $this->fqdn, $this->daemonListen);
+    }
+
+    /**
+     * Get the customer-facing hostname for SFTP connections.
+     */
+    public function getPublicSftpHost(): string
+    {
+        return $this->public_sftp_host ?: $this->fqdn;
+    }
+
+    /**
+     * Get the customer-facing port for SFTP connections.
+     */
+    public function getPublicSftpPort(): int
+    {
+        return $this->public_sftp_port ?: $this->daemonSFTP;
     }
 
     /**

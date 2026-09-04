@@ -201,6 +201,21 @@
                                 <p class="text-muted"><small>The daemon runs its own SFTP management container and does not use the SSHd process on the main physical server. <Strong>Do not use the same port that you have assigned for your physical server's SSH process.</strong></small></p>
                             </div>
                         </div>
+                        <div class="row">
+                            <div class="form-group col-md-8">
+                                <label for="public_sftp_host" class="control-label">Public SFTP Host</label>
+                                <input type="text" name="public_sftp_host" class="form-control" value="{{ old('public_sftp_host', $node->public_sftp_host) }}" placeholder="sftp.example.com" />
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="public_sftp_port" class="control-label">Public SFTP Port</label>
+                                <input type="text" name="public_sftp_port" class="form-control" value="{{ old('public_sftp_port', $node->public_sftp_port) }}" placeholder="{{ $node->daemonSFTP }}" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <p class="text-muted"><small>Optional customer-facing SFTP endpoint when Wings is reached through a TCP proxy or edge gateway. Leave these fields empty to use the node FQDN and daemon SFTP port.</small></p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

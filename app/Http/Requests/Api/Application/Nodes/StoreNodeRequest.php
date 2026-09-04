@@ -3,6 +3,7 @@
 namespace Pterodactyl\Http\Requests\Api\Application\Nodes;
 
 use Pterodactyl\Models\Node;
+use Pterodactyl\Rules\Hostname;
 use Pterodactyl\Services\Acl\Api\AdminAcl;
 use Pterodactyl\Http\Requests\Api\Application\ApplicationApiRequest;
 
@@ -17,7 +18,7 @@ class StoreNodeRequest extends ApplicationApiRequest
      */
     public function rules(?array $rules = null): array
     {
-        return collect($rules ?? Node::getRules())->only([
+        $response = collect($rules ?? Node::getRules())->only([
             'public',
             'name',
             'description',
@@ -33,12 +34,18 @@ class StoreNodeRequest extends ApplicationApiRequest
             'upload_size',
             'daemonListen',
             'daemonSFTP',
+            'public_sftp_host',
+            'public_sftp_port',
             'daemonBase',
         ])->mapWithKeys(function ($value, $key) {
             $key = ($key === 'daemonSFTP') ? 'daemonSftp' : $key;
 
             return [snake_case($key) => $value];
         })->toArray();
+
+        $response['public_sftp_host'][] = new Hostname();
+
+        return $response;
     }
 
     /**
