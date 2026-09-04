@@ -3,8 +3,8 @@
 namespace Pterodactyl\Http\Requests\Admin\Node;
 
 use Pterodactyl\Rules\Fqdn;
-use Pterodactyl\Rules\Hostname;
 use Pterodactyl\Models\Node;
+use Pterodactyl\Rules\Hostname;
 use Pterodactyl\Http\Requests\Admin\AdminFormRequest;
 
 class NodeFormRequest extends AdminFormRequest
