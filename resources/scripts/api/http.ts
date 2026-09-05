@@ -1,5 +1,37 @@
-import axios, { AxiosInstance } from 'axios';
+import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import { store } from '@/state';
+
+interface CsrfRetryConfig extends InternalAxiosRequestConfig {
+    _csrfRetry?: boolean;
+}
+
+let csrfRefresh: Promise<void> | undefined;
+
+/**
+ * A browser tab can outlive Laravel's CSRF token. Refresh it once and let the original mutation
+ * continue instead of making customers reload the Panel or lose an in-progress action. Concurrent
+ * 419 responses share the same refresh request so a busy screen cannot create a retry storm.
+ */
+const refreshCsrfCookie = (): Promise<void> => {
+    if (!csrfRefresh) {
+        csrfRefresh = fetch('/sanctum/csrf-cookie', {
+            method: 'GET',
+            credentials: 'same-origin',
+            cache: 'no-store',
+            headers: { 'X-Requested-With': 'XMLHttpRequest', Accept: 'application/json' },
+        })
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error('Unable to refresh the CSRF cookie.');
+                }
+            })
+            .finally(() => {
+                csrfRefresh = undefined;
+            });
+    }
+
+    return csrfRefresh;
+};
 
 const http: AxiosInstance = axios.create({
     withCredentials: true,
@@ -27,8 +59,21 @@ http.interceptors.response.use(
 
         return resp;
     },
-    (error) => {
+    async (error: AxiosError) => {
         store.getActions().progress.setComplete();
+
+        const config = error.config as CsrfRetryConfig | undefined;
+        if (
+            error.response?.status === 419 &&
+            config &&
+            !config._csrfRetry &&
+            !config.url?.endsWith('/sanctum/csrf-cookie')
+        ) {
+            config._csrfRetry = true;
+            await refreshCsrfCookie();
+
+            return http.request(config);
+        }
 
         throw error;
     }
