@@ -143,10 +143,16 @@ export default ({ database, className }: Props) => {
                 <div css={tw`hidden md:block`}>
                     <FontAwesomeIcon icon={faDatabase} fixedWidth />
                 </div>
-                <div css={tw`flex-1 ml-4`}>
+                <div css={tw`flex-1 ml-4 min-w-0`}>
                     <CopyOnClick text={database.name}>
                         <p css={tw`text-lg`}>{database.name}</p>
                     </CopyOnClick>
+                    <div css={tw`mt-2 md:hidden`}>
+                        <CopyOnClick text={database.connectionString}>
+                            <p css={tw`text-sm break-all`}>{database.connectionString}</p>
+                        </CopyOnClick>
+                        <p css={tw`mt-1 text-2xs text-neutral-500 uppercase select-none`}>Endpoint</p>
+                    </div>
                 </div>
                 <div css={tw`ml-8 text-center hidden md:block`}>
                     <CopyOnClick text={database.connectionString}>
@@ -165,7 +171,12 @@ export default ({ database, className }: Props) => {
                     <p css={tw`mt-1 text-2xs text-neutral-500 uppercase select-none`}>Username</p>
                 </div>
                 <div css={tw`ml-8`}>
-                    <Button isSecondary css={tw`mr-2`} onClick={() => setConnectionVisible(true)}>
+                    <Button
+                        isSecondary
+                        css={tw`mr-2`}
+                        aria-label={'View database connection details'}
+                        onClick={() => setConnectionVisible(true)}
+                    >
                         <FontAwesomeIcon icon={faEye} fixedWidth />
                     </Button>
                     <Can action={'database.delete'}>

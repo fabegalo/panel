@@ -34,12 +34,15 @@ class DatabaseTransformer extends BaseClientTransformer
     public function transform(Database $model): array
     {
         $model->loadMissing('host');
+        $host = $model->getRelation('host');
+        $displayHost = config('pterodactyl.client_features.databases.display_host');
+        $displayPort = config('pterodactyl.client_features.databases.display_port');
 
         return [
             'id' => $this->hashids->encode($model->id),
             'host' => [
-                'address' => $model->getRelation('host')->host,
-                'port' => $model->getRelation('host')->port,
+                'address' => is_string($displayHost) && $displayHost !== '' ? $displayHost : $host->host,
+                'port' => is_numeric($displayPort) ? (int) $displayPort : $host->port,
             ],
             'name' => $model->database,
             'username' => $model->username,

@@ -107,6 +107,10 @@ return [
         'databases' => [
             'enabled' => env('PTERODACTYL_CLIENT_DATABASES_ENABLED', true),
             'allow_random' => env('PTERODACTYL_CLIENT_DATABASES_ALLOW_RANDOM', true),
+            // The Panel may reach a database through an internal Docker hostname while customers
+            // need a stable, branded hostname that resolves inside their game containers.
+            'display_host' => env('PTERODACTYL_CLIENT_DATABASES_DISPLAY_HOST'),
+            'display_port' => env('PTERODACTYL_CLIENT_DATABASES_DISPLAY_PORT'),
         ],
 
         'schedules' => [
