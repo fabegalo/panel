@@ -2,9 +2,8 @@
 
 namespace Pterodactyl\Tests\Unit\Transformers\Api\Client;
 
-use Mockery;
-use Pterodactyl\Models\Database;
 use Pterodactyl\Tests\TestCase;
+use Pterodactyl\Models\Database;
 use Pterodactyl\Models\DatabaseHost;
 use Illuminate\Contracts\Encryption\Encrypter;
 use Pterodactyl\Contracts\Extensions\HashidsInterface;
@@ -17,11 +16,11 @@ class DatabaseTransformerTest extends TestCase
         config()->set('pterodactyl.client_features.databases.display_host', 'database.waybercraft.com.br');
         config()->set('pterodactyl.client_features.databases.display_port', 3306);
 
-        $hashids = Mockery::mock(HashidsInterface::class);
+        $hashids = \Mockery::mock(HashidsInterface::class);
         $hashids->expects('encode')->with(42)->andReturn('database-id');
 
         $transformer = new DatabaseTransformer();
-        $transformer->handle(Mockery::mock(Encrypter::class), $hashids);
+        $transformer->handle(\Mockery::mock(Encrypter::class), $hashids);
 
         $database = Database::factory()->make([
             'id' => 42,
