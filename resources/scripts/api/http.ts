@@ -5,25 +5,32 @@ interface CsrfRetryConfig extends InternalAxiosRequestConfig {
     _csrfRetry?: boolean;
 }
 
-let csrfRefresh: Promise<void> | undefined;
+let csrfRefresh: Promise<string> | undefined;
 
 /**
  * A browser tab can outlive Laravel's CSRF token. Refresh it once and let the original mutation
  * continue instead of making customers reload the Panel or lose an in-progress action. Concurrent
  * 419 responses share the same refresh request so a busy screen cannot create a retry storm.
  */
-const refreshCsrfCookie = (): Promise<void> => {
+const refreshCsrfToken = (): Promise<string> => {
     if (!csrfRefresh) {
-        csrfRefresh = fetch('/sanctum/csrf-cookie', {
+        csrfRefresh = fetch('/csrf-token', {
             method: 'GET',
             credentials: 'same-origin',
             cache: 'no-store',
             headers: { 'X-Requested-With': 'XMLHttpRequest', Accept: 'application/json' },
         })
-            .then((response) => {
+            .then(async (response) => {
                 if (!response.ok) {
-                    throw new Error('Unable to refresh the CSRF cookie.');
+                    throw new Error('Unable to refresh the CSRF token.');
                 }
+
+                const body = (await response.json()) as { token?: unknown };
+                if (typeof body.token !== 'string' || body.token.length === 0) {
+                    throw new Error('The Panel returned an invalid CSRF token.');
+                }
+
+                return body.token;
             })
             .finally(() => {
                 csrfRefresh = undefined;
@@ -70,12 +77,13 @@ http.interceptors.response.use(
             !config.url?.endsWith('/sanctum/csrf-cookie')
         ) {
             config._csrfRetry = true;
-            await refreshCsrfCookie();
+            const token = await refreshCsrfToken();
 
-            // Axios materializes the cookie value into the request headers before sending it. When
-            // we reuse the rejected config, that stale value wins over the freshly issued cookie
-            // unless it is removed first. Let Axios derive both CSRF headers again on the retry.
+            // Laravel prefers X-CSRF-TOKEN over X-XSRF-TOKEN. Use the token returned by the exact
+            // server-side session selected for this request, avoiding ambiguous duplicate browser
+            // cookies left behind by an older hostname or deployment.
             config.headers.delete(['X-XSRF-TOKEN', 'X-CSRF-TOKEN']);
+            config.headers.set('X-CSRF-TOKEN', token);
 
             return http.request(config);
         }

@@ -9,6 +9,8 @@ Route::get('/account', [Base\IndexController::class, 'index'])
     ->withoutMiddleware(RequireTwoFactorAuthentication::class)
     ->name('account');
 
+Route::get('/csrf-token', Base\CsrfTokenController::class)->name('csrf-token');
+
 Route::get('/locales/locale.json', Base\LocaleController::class)
     ->withoutMiddleware(['auth', RequireTwoFactorAuthentication::class])
     ->where('namespace', '.*');

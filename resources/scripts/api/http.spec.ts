@@ -22,6 +22,7 @@ describe('CSRF recovery', () => {
     it('refreshes the CSRF cookie and retries a mutation exactly once', async () => {
         let attempts = 0;
         let retriedXsrfHeader: unknown;
+        let retriedCsrfHeader: unknown;
         http.defaults.adapter = async (config) => {
             attempts += 1;
             if (attempts === 1) {
@@ -30,19 +31,23 @@ describe('CSRF recovery', () => {
             }
 
             retriedXsrfHeader = config.headers.get('X-XSRF-TOKEN');
+            retriedCsrfHeader = config.headers.get('X-CSRF-TOKEN');
 
             return response(config, 200, { updated: true });
         };
-        global.fetch = jest.fn().mockResolvedValue({ ok: true });
+        global.fetch = jest
+            .fn()
+            .mockResolvedValue({ ok: true, json: async () => ({ token: 'current-session-token' }) });
 
         const result = await http.post('/api/client/servers/example/settings/rename', { name: 'Servidor' });
 
         expect(result.data).toEqual({ updated: true });
         expect(attempts).toBe(2);
         expect(retriedXsrfHeader).toBeUndefined();
+        expect(retriedCsrfHeader).toBe('current-session-token');
         expect(global.fetch).toHaveBeenCalledTimes(1);
         expect(global.fetch).toHaveBeenCalledWith(
-            '/sanctum/csrf-cookie',
+            '/csrf-token',
             expect.objectContaining({ method: 'GET', credentials: 'same-origin', cache: 'no-store' })
         );
     });
@@ -53,7 +58,9 @@ describe('CSRF recovery', () => {
             attempts += 1;
             return Promise.reject({ config, response: response(config, 419) });
         };
-        global.fetch = jest.fn().mockResolvedValue({ ok: true });
+        global.fetch = jest
+            .fn()
+            .mockResolvedValue({ ok: true, json: async () => ({ token: 'current-session-token' }) });
 
         await expect(
             http.post('/api/client/servers/example/settings/rename', { name: 'Servidor' })
@@ -81,7 +88,7 @@ describe('CSRF recovery', () => {
         };
         global.fetch = jest.fn().mockImplementation(async () => {
             await refreshPending;
-            return { ok: true };
+            return { ok: true, json: async () => ({ token: 'current-session-token' }) };
         });
 
         const first = http.post('/api/client/servers/first/settings/rename', { name: 'Primeiro' });
