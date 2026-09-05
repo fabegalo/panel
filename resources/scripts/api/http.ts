@@ -72,6 +72,11 @@ http.interceptors.response.use(
             config._csrfRetry = true;
             await refreshCsrfCookie();
 
+            // Axios materializes the cookie value into the request headers before sending it. When
+            // we reuse the rejected config, that stale value wins over the freshly issued cookie
+            // unless it is removed first. Let Axios derive both CSRF headers again on the retry.
+            config.headers.delete(['X-XSRF-TOKEN', 'X-CSRF-TOKEN']);
+
             return http.request(config);
         }
 

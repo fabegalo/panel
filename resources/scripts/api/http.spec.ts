@@ -21,11 +21,15 @@ describe('CSRF recovery', () => {
 
     it('refreshes the CSRF cookie and retries a mutation exactly once', async () => {
         let attempts = 0;
+        let retriedXsrfHeader: unknown;
         http.defaults.adapter = async (config) => {
             attempts += 1;
             if (attempts === 1) {
+                config.headers.set('X-XSRF-TOKEN', 'expired-token');
                 return Promise.reject({ config, response: response(config, 419) });
             }
+
+            retriedXsrfHeader = config.headers.get('X-XSRF-TOKEN');
 
             return response(config, 200, { updated: true });
         };
@@ -35,6 +39,7 @@ describe('CSRF recovery', () => {
 
         expect(result.data).toEqual({ updated: true });
         expect(attempts).toBe(2);
+        expect(retriedXsrfHeader).toBeUndefined();
         expect(global.fetch).toHaveBeenCalledTimes(1);
         expect(global.fetch).toHaveBeenCalledWith(
             '/sanctum/csrf-cookie',
